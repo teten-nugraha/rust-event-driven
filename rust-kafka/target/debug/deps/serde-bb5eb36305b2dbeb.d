@@ -1,0 +1,12 @@
+/Users/extern_Teten.Nugraha/Documents/RND/RUST/rust-event-driven/rust-kafka/target/debug/deps/serde-bb5eb36305b2dbeb.d: /Users/extern_Teten.Nugraha/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/lib.rs /Users/extern_Teten.Nugraha/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/integer128.rs /Users/extern_Teten.Nugraha/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/mod.rs /Users/extern_Teten.Nugraha/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/de.rs /Users/extern_Teten.Nugraha/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/ser.rs /Users/extern_Teten.Nugraha/Documents/RND/RUST/rust-event-driven/rust-kafka/target/debug/build/serde-2ef1b0c07a2c153d/out/private.rs
+
+/Users/extern_Teten.Nugraha/Documents/RND/RUST/rust-event-driven/rust-kafka/target/debug/deps/libserde-bb5eb36305b2dbeb.rmeta: /Users/extern_Teten.Nugraha/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/lib.rs /Users/extern_Teten.Nugraha/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/integer128.rs /Users/extern_Teten.Nugraha/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/mod.rs /Users/extern_Teten.Nugraha/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/de.rs /Users/extern_Teten.Nugraha/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/ser.rs /Users/extern_Teten.Nugraha/Documents/RND/RUST/rust-event-driven/rust-kafka/target/debug/build/serde-2ef1b0c07a2c153d/out/private.rs
+
+/Users/extern_Teten.Nugraha/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/lib.rs:
+/Users/extern_Teten.Nugraha/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/integer128.rs:
+/Users/extern_Teten.Nugraha/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/mod.rs:
+/Users/extern_Teten.Nugraha/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/de.rs:
+/Users/extern_Teten.Nugraha/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/ser.rs:
+/Users/extern_Teten.Nugraha/Documents/RND/RUST/rust-event-driven/rust-kafka/target/debug/build/serde-2ef1b0c07a2c153d/out/private.rs:
+
+# env-dep:OUT_DIR=/Users/extern_Teten.Nugraha/Documents/RND/RUST/rust-event-driven/rust-kafka/target/debug/build/serde-2ef1b0c07a2c153d/out
