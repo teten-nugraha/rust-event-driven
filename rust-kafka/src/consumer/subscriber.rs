@@ -14,8 +14,11 @@ use crate::{
     error::{KafkaError, KafkaResult},
 };
 
+use crate::retry::{RetryPolicy, execute_with_retry};
+
 pub struct KafkaConsumer {
     consumer: StreamConsumer,
+    retry_policy: RetryPolicy,
 }
 
 impl KafkaConsumer {
@@ -46,12 +49,15 @@ impl KafkaConsumer {
             "Kafka consumer initialized"
         );
 
-        Ok(Self { consumer })
+        Ok(Self {
+            consumer,
+            retry_policy: RetryPolicy::default(),
+        })
     }
 
     pub async fn subscribe<T, F, Fut>(&self, topics: &[&str], mut handler: F) -> KafkaResult<()>
     where
-        T: DeserializeOwned,
+        T: DeserializeOwned + Clone,
         F: FnMut(T) -> Fut,
         Fut: Future<Output = KafkaResult<()>>,
     {
@@ -90,17 +96,26 @@ impl KafkaConsumer {
                     let event: T = serde_json::from_slice(payload)?;
 
                     // Business logic is executed by client service
-                    if let Err(err) = handler(event).await {
+                    // Clone event so retry closure can reuse it if first attempt fails
+                    let event_clone = event.clone();
+                    let result = execute_with_retry(&self.retry_policy, || {
+                        handler(event_clone.clone())
+                    })
+                    .await;
+
+                    if let Err(err) = result {
                         error!(
                             topic,
                             partition,
                             offset,
                             error = %err,
-                            "Kafka message handler failed; offset not commited"
+                            "Kafka processing failed after retry"
                         );
 
+                        // Don't commit offset — DLQ will be added later
                         return Err(err);
                     }
+
 
                     // Commit only after successfully processing
                     self.consumer

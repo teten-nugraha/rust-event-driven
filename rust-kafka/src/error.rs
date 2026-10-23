@@ -43,3 +43,12 @@ impl From<rdkafka::error::KafkaError> for KafkaError {
         Self::Internal(e.to_string())
     }
 }
+
+impl KafkaError {
+    pub fn is_retryable(&self) -> bool {
+        matches!(
+            self,
+            Self::Connection(_) | Self::Timeout(_) | Self::Handler(_)
+        )
+    }
+}
