@@ -4,7 +4,6 @@ use crate::{
     config::KafkaConfig,
     error::{KafkaError, KafkaResult},
 };
-use log::debug;
 use rdkafka::{
     config::ClientConfig,
     producer::{FutureProducer, FutureRecord},
