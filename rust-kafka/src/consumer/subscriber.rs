@@ -7,7 +7,7 @@ use rdkafka::{
 };
 use serde::de::DeserializeOwned;
 use tokio::signal;
-use tracing::{debug,error,info};
+use tracing::{debug, error, info};
 
 use crate::{
     config::KafkaConfig,
@@ -19,30 +19,29 @@ pub struct KafkaConsumer {
 }
 
 impl KafkaConsumer {
-
     pub fn new(config: KafkaConfig) -> KafkaResult<Self> {
-        let group_id = config.group_id.ok_or_else(|| {
-            KafkaError::ConfigurationError("group id must be provided".into())
-        })?;
+        let group_id = config
+            .group_id
+            .ok_or_else(|| KafkaError::Configuration("group id must be provided".into()))?;
 
         if config.bootstrap_servers.is_empty() {
-            return Err(KafkaError::ConfigurationError(
+            return Err(KafkaError::Configuration(
                 "bootstrap servers must be provided".into(),
-            ))
+            ));
         }
 
-        let consumer : StreamConsumer = ClientConfig::new()
+        let consumer: StreamConsumer = ClientConfig::new()
             .set("bootstrap.servers", &config.bootstrap_servers)
-            .set("client.id", &config.clientid)
+            .set("client.id", &config.client_id)
             .set("group.id", &group_id)
-            .set("auto.offset.reset", &config.auto_offset.reset)
+            .set("auto.offset.reset", &config.auto_offset_reset)
             .set("enable.auto.commit", "false")
             .set("enable.auto.offset.store", "false")
             .create()
             .map_err(|err| KafkaError::Consumer(err.to_string()))?;
 
         info!(
-            client_id = %config.clientid,
+            client_id = %config.client_id,
             group_id = %group_id,
             "Kafka consumer initialized"
         );
@@ -50,37 +49,28 @@ impl KafkaConsumer {
         Ok(Self { consumer })
     }
 
-    pub async fn subscribe<T, F, Fut>(
-        &self,
-        topics: &[&str],
-        mut handler: F,
-    ) -> KafkaResult<>
+    pub async fn subscribe<T, F, Fut>(&self, topics: &[&str], mut handler: F) -> KafkaResult<()>
     where
         T: DeserializeOwned,
         F: FnMut(T) -> Fut,
         Fut: Future<Output = KafkaResult<()>>,
     {
         if topics.is_empty() {
-            return Err(KafkaError::Configuration(
-                "topics must be provided".into(),
-            ))
+            return Err(KafkaError::Configuration("topics must be provided".into()));
         }
 
         self.consumer
             .subscribe(topics)
             .map_err(|err| KafkaError::Consumer(err.to_string()))?;
 
-        info!(
-            ?topics,
-            "Kafka consumer subscribed to topics"
-        );
+        info!(?topics, "Kafka consumer subscribed to topics");
 
         loop {
             tokio::select! {
                 result = self.consumer.recv() => {
                     let message = result.map_err(|e| {
                         KafkaError::Consumer(e.to_string())
-                    });
+                    })?;
 
                     let topic = message.topic();
                     let partition = message.partition();
@@ -93,11 +83,11 @@ impl KafkaConsumer {
                         "Kafka message received"
                     );
 
-                    let payload = message.payload().ok_or_else(||{
+                    let payload = message.payload().ok_or_else(|| {
                         KafkaError::Consumer(format!("Empty payload at {topic}:{partition}:{offset}"))
-                    });
+                    })?;
 
-                    let event: T = serde_json::from_slice(payload.unwrap());
+                    let event: T = serde_json::from_slice(payload)?;
 
                     // Business logic is executed by client service
                     if let Err(err) = handler(event).await {
@@ -114,8 +104,8 @@ impl KafkaConsumer {
 
                     // Commit only after successfully processing
                     self.consumer
-                      .commit_message(&message, CommitMode::Sync)
-                      .map_err(|err| KafkaError::Consumer(err.to_string()))?;
+                        .commit_message(&message, CommitMode::Sync)
+                        .map_err(|err| KafkaError::Consumer(err.to_string()))?;
 
                     debug!(
                         topic,
@@ -130,9 +120,8 @@ impl KafkaConsumer {
                     break;
                 }
             }
-        }// end loop
+        } // end loop
 
         Ok(())
     }
-
 }

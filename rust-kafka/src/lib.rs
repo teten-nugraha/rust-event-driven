@@ -6,4 +6,4 @@ pub mod consumer;
 pub use config::KafkaConfig;
 pub use error::{KafkaError, KafkaResult};
 pub use producer::KafkaProducer;
-pub use consumer::Kafka;
+pub use consumer::KafkaConsumer;

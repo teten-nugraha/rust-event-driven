@@ -1,3 +1,3 @@
 pub mod subscriber;
 
-pub use subscriber::KafkaSubscriber;
+pub use subscriber::KafkaConsumer;

@@ -11,7 +11,7 @@ pub struct KafkaConfig {
     // Producer Settings
     pub producer_acks: String,
     pub enable_idempotence: bool,
-    pub compression_type: Duration,
+    pub compression_type: String,
 }
 
 impl KafkaConfig {

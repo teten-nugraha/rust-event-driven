@@ -31,7 +31,7 @@ impl KafkaProducer {
             .set("enable.idempotence", config.enable_idempotence.to_string())
             .set("compression.type", &config.compression_type.to_string())
             .set(
-                "message.timeout_ms",
+                "message.timeout.ms",
                 config.message_timeout_ms.as_millis().to_string(),
             )
             .create()
