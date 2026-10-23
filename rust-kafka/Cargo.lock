@@ -673,6 +673,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "config",
+ "log",
  "rdkafka",
  "serde",
  "serde_json",

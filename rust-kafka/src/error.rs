@@ -21,10 +21,7 @@ pub enum KafkaError {
     Timeout(String),
 
     #[error("Kafka retry exhaust after {attempts} attempts : {reason} ")]
-    RetryExhausted{
-        attempts: u32,
-        reason: String,
-    },
+    RetryExhausted { attempts: u32, reason: String },
 
     #[error("Kafka dead letter queue error: {0}")]
     DeadLetterQueue(String),

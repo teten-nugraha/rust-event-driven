@@ -1,63 +1,85 @@
 use std::time::Duration;
 
-use rfkafka::{
-    config::ClientConfig,
-    producer::{FutureProducer, FutureRecord },
-};
-
 use crate::{
     config::KafkaConfig,
-    error::KafkaClientError,
+    error::{KafkaError, KafkaResult},
 };
-
+use log::debug;
+use rdkafka::{
+    config::ClientConfig,
+    producer::{FutureProducer, FutureRecord},
+};
 use serde::Serialize;
-use tracing::{ info};
+use tracing::{debug, error, info};
 
 #[derive(Clone)]
 pub struct KafkaProducer {
     producer: FutureProducer,
+    queue_timeout: Duration,
 }
 
 impl KafkaProducer {
-
-    pub fn new(
-        config: &KafkaConfig
-    ) -> Result<Self, KafkaClientError> {
+    pub fn new(config: &KafkaConfig) -> KafkaResult<Self> {
+        if config.bootstrap_servers.trim().is_empty() {
+            return Err(KafkaError::Configuration(
+                "bootstrap_servers cannot be empty".into(),
+            ));
+        }
         let producer = ClientConfig::new()
-        .set("bootstrap.servers", &config.brokers)
-        .set("client.id", &config.client_id)
-        .set("message.timeout_ms", config.message_timeout_ms.to_string())
-        .set("enable.idempotence", "true")
-        .set("acks", "all")
-        .set("compression.type", "lz4")
-        .create::<FutureProducer>()?;
+            .set("bootstrap.servers", &config.bootstrap_servers)
+            .set("client.id", &config.client_id)
+            .set("acks", &config.producer_acks)
+            .set("enable.idempotence", config.enable_idempotence.to_string())
+            .set("compression.type", &config.compression_type.to_string())
+            .set(
+                "message.timeout_ms",
+                config.message_timeout_ms.as_millis().to_string(),
+            )
+            .create()
+            .map_err(|e| KafkaError::Producer(e.to_string()))?;
 
-        Ok(Self { producer })
+        info!("Kafka producer initialized: {}", config.client_id);
+
+        Ok(Self {
+            producer,
+            queue_timeout: Duration::from_secs(5),
+        })
     }
 
     pub async fn publish<T: Serialize>(
         &self,
         topic: &str,
-        key: Option<&str>,
-        event: &T,
-    ) -> Result<(), KafkaClientError> {
-        let payload = serde_json::to_vec(event)?;
+        key: &str,
+        payload: &T,
+    ) -> KafkaResult<()>
+    where
+        T: Serialize,
+    {
+        let serialized = serde_json::to_vec(payload)?;
 
-        let record = FutureRecord::to(topic)
-        .payload(&payload)
-            .key(key);
+        let record = FutureRecord::to(topic).key(key).payload(&serialized);
 
-        self.producer
-        .send(record, Duration::from_secs(5))
-        .await
-        .map_err(|(err,_)| KafkaClientError::from)?;
+        match self.producer.send(record, self.queue_timeout).await {
+            Ok(delivery) => {
+                debug!(
+                    topic = topic,
+                    key = key,
+                    delivery = ?delivery,
+                    "Kafka message delivered"
+                );
 
-        info!(
-            topic = topic,
-            key = ?key,
-            "Kafka message delivered successfully"
-        );
+                Ok(())
+            }
+            Err((err, message)) => {
+                error!(
+                    topic = topic,
+                    key = key,
+                    error = ?err,
+                    "Kafka message delivery failed"
+                );
 
-        Ok(())
+                Err(KafkaError::Producer(err.to_string()))
+            }
+        }
     }
 }
